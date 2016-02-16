@@ -27,6 +27,7 @@ namespace Nop.Plugin.DiscountRules.HasAllProducts.Controllers
         private readonly ISettingService _settingService;
         private readonly IPermissionService _permissionService;
         private readonly IWorkContext _workContext;
+        private readonly IStoreContext _storeContext;
         private readonly ILocalizationService _localizationService;
         private readonly ICategoryService _categoryService;
         private readonly IManufacturerService _manufacturerService;
@@ -38,6 +39,7 @@ namespace Nop.Plugin.DiscountRules.HasAllProducts.Controllers
             ISettingService settingService, 
             IPermissionService permissionService,
             IWorkContext workContext, 
+            IStoreContext storeContext,
             ILocalizationService localizationService,
              ICategoryService categoryService, 
             IManufacturerService manufacturerService,
@@ -49,6 +51,7 @@ namespace Nop.Plugin.DiscountRules.HasAllProducts.Controllers
             this._settingService = settingService;
             this._permissionService = permissionService;
             this._workContext = workContext;
+            this._storeContext = storeContext;
             this._localizationService = localizationService;
             this._categoryService = categoryService;
             this._manufacturerService = manufacturerService;
@@ -132,13 +135,13 @@ namespace Nop.Plugin.DiscountRules.HasAllProducts.Controllers
 
             //categories
             model.AvailableCategories.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            var categories = _categoryService.GetAllCategories(showHidden: true);
+            var categories = _categoryService.GetAllCategories(storeId: _storeContext.CurrentStore.Id, showHidden: true);
             foreach (var c in categories)
                 model.AvailableCategories.Add(new SelectListItem { Text = c.GetFormattedBreadCrumb(categories), Value = c.Id.ToString() });
 
             //manufacturers
             model.AvailableManufacturers.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            foreach (var m in _manufacturerService.GetAllManufacturers(showHidden: true))
+            foreach (var m in _manufacturerService.GetAllManufacturers(storeId: _storeContext.CurrentStore.Id, showHidden: true))
                 model.AvailableManufacturers.Add(new SelectListItem { Text = m.Name, Value = m.Id.ToString() });
 
             //stores

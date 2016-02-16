@@ -34,10 +34,11 @@ namespace Nop.Admin.Controllers
         private readonly IStoreService _storeService;
         private readonly IVendorService _vendorService;
         private readonly IWorkContext _workContext;
+        private readonly IStoreContext _storeContext; 
 
-		#endregion
+        #endregion
 
-		#region Constructors
+        #region Constructors
 
         public CustomerRoleController(ICustomerService customerService,
             ILocalizationService localizationService, 
@@ -48,7 +49,8 @@ namespace Nop.Admin.Controllers
             IManufacturerService manufacturerService,
             IStoreService storeService,
             IVendorService vendorService,
-            IWorkContext workContext)
+            IWorkContext workContext,
+            IStoreContext storeContext)
 		{
             this._customerService = customerService;
             this._localizationService = localizationService;
@@ -60,6 +62,7 @@ namespace Nop.Admin.Controllers
             this._storeService = storeService;
             this._vendorService = vendorService;
             this._workContext = workContext;
+            this._storeContext = storeContext;
 		}
 
 		#endregion 
@@ -247,13 +250,13 @@ namespace Nop.Admin.Controllers
 
             //categories
             model.AvailableCategories.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            var categories = _categoryService.GetAllCategories(showHidden: true);
+            var categories = _categoryService.GetAllCategories(storeId: _storeContext.CurrentStore.Id, showHidden: true);
             foreach (var c in categories)
                 model.AvailableCategories.Add(new SelectListItem { Text = c.GetFormattedBreadCrumb(categories), Value = c.Id.ToString() });
 
             //manufacturers
             model.AvailableManufacturers.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            foreach (var m in _manufacturerService.GetAllManufacturers(showHidden: true))
+            foreach (var m in _manufacturerService.GetAllManufacturers(storeId: _storeContext.CurrentStore.Id, showHidden: true))
                 model.AvailableManufacturers.Add(new SelectListItem { Text = m.Name, Value = m.Id.ToString() });
 
             //stores

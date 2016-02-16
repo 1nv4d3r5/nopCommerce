@@ -40,6 +40,7 @@ namespace Nop.Admin.Controllers
         private readonly CurrencySettings _currencySettings;
         private readonly IPermissionService _permissionService;
         private readonly IWorkContext _workContext;
+        private readonly IStoreContext _storeContext;
         private readonly IManufacturerService _manufacturerService;
         private readonly IStoreService _storeService;
         private readonly IVendorService _vendorService;
@@ -61,6 +62,7 @@ namespace Nop.Admin.Controllers
             CurrencySettings currencySettings,
             IPermissionService permissionService,
             IWorkContext workContext,
+            IStoreContext storeContext,
             IManufacturerService manufacturerService,
             IStoreService storeService,
             IVendorService vendorService,
@@ -78,6 +80,7 @@ namespace Nop.Admin.Controllers
             this._currencySettings = currencySettings;
             this._permissionService = permissionService;
             this._workContext = workContext;
+            this._storeContext = storeContext;
             this._manufacturerService = manufacturerService;
             this._storeService = storeService;
             this._vendorService = vendorService;
@@ -457,13 +460,13 @@ namespace Nop.Admin.Controllers
             var model = new DiscountModel.AddProductToDiscountModel();
             //categories
             model.AvailableCategories.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            var categories = _categoryService.GetAllCategories(showHidden: true);
+            var categories = _categoryService.GetAllCategories(storeId: _storeContext.CurrentStore.Id, showHidden: true);
             foreach (var c in categories)
                 model.AvailableCategories.Add(new SelectListItem { Text = c.GetFormattedBreadCrumb(categories), Value = c.Id.ToString() });
 
             //manufacturers
             model.AvailableManufacturers.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            foreach (var m in _manufacturerService.GetAllManufacturers(showHidden: true))
+            foreach (var m in _manufacturerService.GetAllManufacturers(storeId: _storeContext.CurrentStore.Id, showHidden: true))
                 model.AvailableManufacturers.Add(new SelectListItem { Text = m.Name, Value = m.Id.ToString() });
 
             //stores
@@ -609,7 +612,7 @@ namespace Nop.Admin.Controllers
                 return AccessDeniedView();
 
             var categories = _categoryService.GetAllCategories(model.SearchCategoryName,
-                command.Page - 1, command.PageSize, true);
+                _storeContext.CurrentStore.Id, command.Page - 1, command.PageSize, true);
             var gridModel = new DataSourceResult
             {
                 Data = categories.Select(x =>
@@ -725,7 +728,7 @@ namespace Nop.Admin.Controllers
                 return AccessDeniedView();
 
             var manufacturers = _manufacturerService.GetAllManufacturers(model.SearchManufacturerName,
-                command.Page - 1, command.PageSize, true);
+                _storeContext.CurrentStore.Id, command.Page - 1, command.PageSize, true);
             var gridModel = new DataSourceResult
             {
                 Data = manufacturers.Select(x => x.ToModel()),

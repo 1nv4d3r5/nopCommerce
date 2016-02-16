@@ -50,6 +50,7 @@ namespace Nop.Admin.Controllers
         private readonly IPermissionService _permissionService;
         private readonly CatalogSettings _catalogSettings;
         private readonly IWorkContext _workContext;
+        private readonly IStoreContext _storeContext;
         private readonly IImportManager _importManager;
 
         #endregion
@@ -76,6 +77,7 @@ namespace Nop.Admin.Controllers
             IPermissionService permissionService,
             CatalogSettings catalogSettings,
             IWorkContext workContext,
+            IStoreContext storeContext,
             IImportManager importManager)
         {
             this._categoryService = categoryService;
@@ -98,6 +100,7 @@ namespace Nop.Admin.Controllers
             this._permissionService = permissionService;
             this._catalogSettings = catalogSettings;
             this._workContext = workContext;
+            this._storeContext = storeContext;
             this._importManager = importManager;
         }
 
@@ -282,6 +285,9 @@ namespace Nop.Admin.Controllers
                 return AccessDeniedView();
 
             var model = new ManufacturerListModel();
+            model.AvailableStores.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
+            foreach (var s in _storeService.GetAllStores())
+                model.AvailableStores.Add(new SelectListItem { Text = s.Name, Value = s.Id.ToString() });
             return View(model);
         }
 
@@ -292,7 +298,7 @@ namespace Nop.Admin.Controllers
                 return AccessDeniedView();
 
             var manufacturers = _manufacturerService.GetAllManufacturers(model.SearchManufacturerName,
-                command.Page - 1, command.PageSize, true);
+                model.SearchStoreId, command.Page - 1, command.PageSize, true);
             var gridModel = new DataSourceResult
             {
                 Data = manufacturers.Select(x => x.ToModel()),
@@ -530,7 +536,7 @@ namespace Nop.Admin.Controllers
 
             try
             {
-                var manufacturers = _manufacturerService.GetAllManufacturers(showHidden: true);
+                var manufacturers = _manufacturerService.GetAllManufacturers(storeId: _storeContext.CurrentStore.Id, showHidden: true);
                 var xml = _exportManager.ExportManufacturersToXml(manufacturers);
                 return new XmlDownloadResult(xml, "manufacturers.xml");
             }
@@ -548,7 +554,7 @@ namespace Nop.Admin.Controllers
 
             try
             {
-                var bytes = _exportManager.ExportManufacturersToXlsx(_manufacturerService.GetAllManufacturers(showHidden: true).Where(p=>!p.Deleted));
+                var bytes = _exportManager.ExportManufacturersToXlsx(_manufacturerService.GetAllManufacturers(storeId: _storeContext.CurrentStore.Id, showHidden: true).Where(p=>!p.Deleted));
                  
                 return File(bytes, "text/xls", "manufacturers.xlsx");
             }
@@ -664,13 +670,13 @@ namespace Nop.Admin.Controllers
             var model = new ManufacturerModel.AddManufacturerProductModel();
             //categories
             model.AvailableCategories.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            var categories = _categoryService.GetAllCategories(showHidden: true);
+            var categories = _categoryService.GetAllCategories(storeId: _storeContext.CurrentStore.Id, showHidden: true);
             foreach (var c in categories)
                 model.AvailableCategories.Add(new SelectListItem { Text = c.GetFormattedBreadCrumb(categories), Value = c.Id.ToString() });
 
             //manufacturers
             model.AvailableManufacturers.Add(new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
-            foreach (var m in _manufacturerService.GetAllManufacturers(showHidden: true))
+            foreach (var m in _manufacturerService.GetAllManufacturers(storeId: _storeContext.CurrentStore.Id, showHidden: true))
                 model.AvailableManufacturers.Add(new SelectListItem { Text = m.Name, Value = m.Id.ToString() });
 
             //stores
